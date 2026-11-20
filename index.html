@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="思考メモ">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#eef0f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1014" media="(prefers-color-scheme: dark)">
+<title>ワンタップ思考メモ</title>
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#eef0f5;
+    --panel:rgba(244,245,249,.86);
+    --card:#ffffff;
+    --card-2:#f7f8fb;
+    --text:#16181d;
+    --text-soft:#5c6270;
+    --text-faint:#8a91a0;
+    --line:#dde2ec;
+    --accent:#4f46e5;
+    --accent-soft:#eceafe;
+    --on-accent:#ffffff;
+    --danger:#d92d20;
+    --danger-soft:#fdecea;
+    --shadow:0 1px 2px rgba(20,25,40,.06), 0 8px 20px rgba(20,25,40,.06);
+    --radius:16px;
+    --pill-idea-bg:#fef3c7; --pill-idea-fg:#8a5300;
+    --pill-work-bg:#dbeafe; --pill-work-fg:#1d4ed8;
+    --pill-home-bg:#d1fae5; --pill-home-fg:#047857;
+    --pill-memo-bg:#ede9fe; --pill-memo-fg:#5b21b6;
+    --pill-now-bg:#fee2e2;  --pill-now-fg:#b42318;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      color-scheme: dark;
+      --bg:#0e1014;
+      --panel:rgba(16,19,24,.86);
+      --card:#171a21;
+      --card-2:#1e222b;
+      --text:#f1f3f8;
+      --text-soft:#a2aab9;
+      --text-faint:#7d8697;
+      --line:#2a2f3a;
+      --accent:#8f88ff;
+      --accent-soft:#262247;
+      --on-accent:#0d0f14;
+      --danger:#ff7b72;
+      --danger-soft:#3a1d1c;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 24px rgba(0,0,0,.35);
+      --pill-idea-bg:rgba(245,158,11,.18); --pill-idea-fg:#fcd34d;
+      --pill-work-bg:rgba(59,130,246,.18); --pill-work-fg:#93c5fd;
+      --pill-home-bg:rgba(16,185,129,.18); --pill-home-fg:#6ee7b7;
+      --pill-memo-bg:rgba(139,92,246,.20); --pill-memo-fg:#c4b5fd;
+      --pill-now-bg:rgba(239,68,68,.18);  --pill-now-fg:#fca5a5;
+    }
+  }
+  html[data-theme="light"]{
+    color-scheme: light;
+    --bg:#eef0f5;
+    --panel:rgba(244,245,249,.86);
+    --card:#ffffff;
+    --card-2:#f7f8fb;
+    --text:#16181d;
+    --text-soft:#5c6270;
+    --text-faint:#8a91a0;
+    --line:#dde2ec;
+    --accent:#4f46e5;
+    --accent-soft:#eceafe;
+    --on-accent:#ffffff;
+    --danger:#d92d20;
+    --danger-soft:#fdecea;
+    --shadow:0 1px 2px rgba(20,25,40,.06), 0 8px 20px rgba(20,25,40,.06);
+    --pill-idea-bg:#fef3c7; --pill-idea-fg:#8a5300;
+    --pill-work-bg:#dbeafe; --pill-work-fg:#1d4ed8;
+    --pill-home-bg:#d1fae5; --pill-home-fg:#047857;
+    --pill-memo-bg:#ede9fe; --pill-memo-fg:#5b21b6;
+    --pill-now-bg:#fee2e2;  --pill-now-fg:#b42318;
+  }
+  html[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#0e1014;
+    --panel:rgba(16,19,24,.86);
+    --card:#171a21;
+    --card-2:#1e222b;
+    --text:#f1f3f8;
+    --text-soft:#a2aab9;
+    --text-faint:#7d8697;
+    --line:#2a2f3a;
+    --accent:#8f88ff;
+    --accent-soft:#262247;
+    --on-accent:#0d0f14;
+    --danger:#ff7b72;
+    --danger-soft:#3a1d1c;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 24px rgba(0,0,0,.35);
+    --pill-idea-bg:rgba(245,158,11,.18); --pill-idea-fg:#fcd34d;
+    --pill-work-bg:rgba(59,130,246,.18); --pill-work-fg:#93c5fd;
+    --pill-home-bg:rgba(16,185,129,.18); --pill-home-fg:#6ee7b7;
+    --pill-memo-bg:rgba(139,92,246,.20); --pill-memo-fg:#c4b5fd;
+    --pill-now-bg:rgba(239,68,68,.18);  --pill-now-fg:#fca5a5;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo,system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:calc(28px + env(safe-area-inset-bottom));
+    overscroll-behavior-y:contain;
+  }
+  button{
+    font:inherit; color:inherit; background:none; border:0; margin:0; padding:0;
+    cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+  }
+  input,textarea{ font:inherit; color:inherit; }
+  ::selection{ background:var(--accent-soft); }
+
+  /* ---------- header ---------- */
+  .header{
+    display:flex; align-items:center; gap:10px;
+    padding:calc(10px + env(safe-area-inset-top)) 14px 4px;
+  }
+  .brand{ display:flex; align-items:center; gap:8px; min-width:0; flex:1; }
+  .brand-mark{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; border-radius:9px; flex:none;
+    background:var(--accent); color:var(--on-accent);
+    font-size:16px; box-shadow:var(--shadow);
+  }
+  .brand-title{
+    font-size:16px; font-weight:700; letter-spacing:.01em;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .icon-btn{
+    width:44px; height:44px; flex:none;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:19px; line-height:1;
+    border-radius:12px; color:var(--text-soft);
+    background:var(--card); border:1px solid var(--line);
+  }
+  .icon-btn:active{ transform:scale(.95); }
+
+  /* ---------- composer (sticky) ---------- */
+  .composer{
+    position:sticky; top:0; z-index:20;
+    padding:6px 12px 12px;
+    background:var(--panel);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4);
+    backdrop-filter:blur(16px) saturate(1.4);
+    border-bottom:1px solid var(--line);
+  }
+  .tag-row{
+    display:flex; flex-wrap:wrap; gap:6px;
+    padding:2px 0 8px; margin:0 -2px;
+  }
+  .tag-chip{
+    flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; gap:5px;
+    min-height:44px; padding:0 11px; min-width:0;
+    border-radius:14px; border:1px solid var(--line);
+    background:var(--card); color:var(--text-soft);
+    font-size:14px; font-weight:600; white-space:nowrap;
+    transition:background .15s, color .15s, border-color .15s;
+  }
+  .tag-chip .tag-emoji{ font-size:15px; }
+  .tag-chip.on{
+    background:var(--accent-soft); color:var(--accent);
+    border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent);
+  }
+  .tag-chip:active{ transform:scale(.97); }
+
+  .input-wrap{ position:relative; }
+  #memoInput{
+    display:block; width:100%;
+    min-height:64px; max-height:180px;
+    padding:12px 14px;
+    font-size:16px; line-height:1.5;
+    color:var(--text);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    outline:none; resize:none; overflow-y:auto;
+    box-shadow:var(--shadow);
+    -webkit-appearance:none; appearance:none;
+  }
+  #memoInput::placeholder{ color:var(--text-faint); }
+  #memoInput:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+
+  .composer-row{
+    display:flex; align-items:flex-end; gap:8px;
+    margin-top:8px;
+  }
+  .quick-row{
+    flex:1; min-width:0;
+    display:flex; gap:6px;
+    overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    padding:2px 0;
+  }
+  .quick-row::-webkit-scrollbar{ display:none; }
+  .quick-chip{
+    flex:none; display:inline-flex; align-items:center;
+    min-height:44px; padding:0 13px;
+    border-radius:22px; border:1px dashed var(--line);
+    background:var(--card-2); color:var(--text-soft);
+    font-size:13.5px; font-weight:600; white-space:nowrap;
+  }
+  .quick-chip:active{ transform:scale(.97); background:var(--accent-soft); color:var(--accent); }
+  .record-btn{
+    flex:none; min-width:84px; min-height:48px;
+    padding:0 18px;
+    border-radius:14px;
+    background:var(--accent); color:var(--on-accent);
+    font-size:16px; font-weight:700; letter-spacing:.04em;
+    box-shadow:var(--shadow);
+  }
+  .record-btn:active{ transform:scale(.97); opacity:.9; }
+  .record-btn.is-idle{ opacity:.45; }
+
+  /* ---------- controls ---------- */
+  .controls{ padding:12px 12px 2px; }
+  .search-wrap{ position:relative; }
+  .search-icon{
+    position:absolute; left:13px; top:50%; transform:translateY(-50%);
+    font-size:14px; color:var(--text-faint); pointer-events:none;
+  }
+  #searchInput{
+    display:block; width:100%; min-height:44px;
+    padding:0 40px 0 36px;
+    font-size:16px;
+    background:var(--card); color:var(--text);
+    border:1px solid var(--line); border-radius:14px;
+    outline:none; -webkit-appearance:none; appearance:none;
+  }
+  #searchInput:focus{ border-color:var(--accent); }
+  #searchInput::-webkit-search-cancel-button{ display:none; }
+  .clear-btn{
+    position:absolute; right:0; top:50%; transform:translateY(-50%);
+    width:44px; height:44px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:14px; color:var(--text-faint);
+  }
+  .clear-btn.is-hidden{ display:none; }
+
+  .filter-row{
+    display:flex; gap:6px; align-items:center;
+    overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    padding:10px 0 2px;
+  }
+  .filter-row::-webkit-scrollbar{ display:none; }
+  .filter-chip{
+    flex:none; display:inline-flex; align-items:center; gap:4px;
+    min-height:44px; padding:0 14px;
+    border-radius:22px; border:1px solid var(--line);
+    background:var(--card); color:var(--text-soft);
+    font-size:14px; font-weight:600; white-space:nowrap;
+  }
+  .filter-chip.on{ background:var(--text); color:var(--bg); border-color:var(--text); }
+  .filter-chip.only-on{ background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
+  .filter-sep{ flex:none; width:1px; height:24px; background:var(--line); margin:0 2px; }
+
+  .list-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 2px 4px;
+  }
+  .list-count{
+    font-size:12.5px; color:var(--text-faint);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .ghost-btn{
+    flex:none; display:inline-flex; align-items:center; gap:5px;
+    min-height:44px; padding:0 12px;
+    border-radius:12px; border:1px solid var(--line);
+    background:var(--card); color:var(--text-soft);
+    font-size:13px; font-weight:600; white-space:nowrap;
+  }
+  .ghost-btn:active{ transform:scale(.97); }
+
+  /* ---------- list ---------- */
+  .memo-list{
+    list-style:none; margin:0; padding:4px 12px 8px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .memo{
+    list-style:none;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:12px 12px 8px;
+    box-shadow:var(--shadow);
+  }
+  .memo.is-pinned{ border-color:var(--accent); }
+  .memo.is-done{ opacity:.62; }
+  .memo-top{ display:flex; align-items:flex-start; gap:8px; }
+  .memo-text{
+    flex:1; min-width:0;
+    font-size:15.5px; line-height:1.6;
+    white-space:pre-wrap; word-break:break-word;
+    overflow-wrap:anywhere;
+    -webkit-user-select:text; user-select:text;
+  }
+  .memo.is-done .memo-text{ text-decoration:line-through; text-decoration-thickness:1px; color:var(--text-soft); }
+  .pin-btn{
+    flex:none; width:44px; height:44px; margin:-10px -10px -6px 0;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:18px; color:var(--text-faint); border-radius:12px;
+  }
+  .pin-btn.on{ color:var(--accent); }
+  .pin-btn:active{ transform:scale(.92); }
+
+  .memo-meta{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    margin:2px 0 6px;
+  }
+  .pill{
+    display:inline-flex; align-items:center; gap:4px;
+    padding:2px 9px; border-radius:999px;
+    font-size:11.5px; font-weight:700; letter-spacing:.01em;
+  }
+  .pill.idea{ background:var(--pill-idea-bg); color:var(--pill-idea-fg); }
+  .pill.work{ background:var(--pill-work-bg); color:var(--pill-work-fg); }
+  .pill.home{ background:var(--pill-home-bg); color:var(--pill-home-fg); }
+  .pill.memo{ background:var(--pill-memo-bg); color:var(--pill-memo-fg); }
+  .pill.now{ background:var(--pill-now-bg); color:var(--pill-now-fg); }
+  .time{ font-size:11.5px; color:var(--text-faint); }
+
+  .memo-actions{
+    display:flex; align-items:center; gap:2px;
+    border-top:1px solid var(--line);
+    margin-top:4px; padding-top:2px;
+  }
+  .act{
+    flex:1; min-height:44px;
+    display:inline-flex; align-items:center; justify-content:center; gap:5px;
+    font-size:12.5px; font-weight:600; color:var(--text-soft);
+    border-radius:10px;
+  }
+  .act:active{ background:var(--card-2); }
+  .act.done-on{ color:var(--accent); }
+  .act.del{ color:var(--danger); }
+  .act .act-icon{ font-size:13.5px; }
+
+  button:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+
+  .empty{
+    margin:18px 16px; padding:26px 20px;
+    text-align:center; color:var(--text-soft);
+    background:var(--card); border:1px dashed var(--line);
+    border-radius:var(--radius);
+  }
+  .empty-title{ font-size:15px; font-weight:700; color:var(--text); margin-bottom:8px; }
+  .empty-tips{ margin:0; padding:0; list-style:none; font-size:12.5px; line-height:1.9; color:var(--text-faint); }
+  .empty[hidden]{ display:none; }
+
+  .foot{
+    padding:10px 16px 0; text-align:center;
+    font-size:11px; color:var(--text-faint);
+  }
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom));
+    z-index:60;
+    display:flex; align-items:center; gap:10px;
+    max-width:calc(100% - 24px);
+    padding:8px 10px 8px 16px;
+    border-radius:999px;
+    background:rgba(22,24,29,.94); color:#fff;
+    font-size:14px; font-weight:600;
+    box-shadow:0 10px 30px rgba(0,0,0,.28);
+    transform:translate(-50%, 24px); opacity:0; pointer-events:none;
+    transition:transform .2s ease, opacity .2s ease;
+  }
+  .toast.show{ transform:translate(-50%, 0); opacity:1; pointer-events:auto; }
+  .toast-msg{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .toast-action{
+    flex:none; min-height:44px; padding:0 16px;
+    display:inline-flex; align-items:center;
+    border-radius:999px; background:rgba(255,255,255,.16);
+    color:#fff; font-size:13px; font-weight:700; white-space:nowrap;
+  }
+  .toast-action:active{ background:rgba(255,255,255,.3); }
+
+  @media (min-width:560px){
+    .composer, .controls, .memo-list{ max-width:640px; margin-left:auto; margin-right:auto; }
+    .composer{ border-radius:0 0 var(--radius) var(--radius); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">⚡</span>
+    <span class="brand-title">ワンタップ思考メモ</span>
+  </div>
+  <button id="themeBtn" class="icon-btn" type="button" aria-label="テーマ: 自動" title="テーマ: 自動">🌗</button>
+</header>
+
+<section class="composer" aria-label="メモを記録">
+  <div id="tagRow" class="tag-row" role="group" aria-label="カテゴリ"></div>
+  <div class="input-wrap">
+    <textarea id="memoInput" rows="2" placeholder="思いついたことを、そのまま。" autocomplete="off" autocapitalize="off" enterkeyhint="enter" aria-label="メモ本文"></textarea>
+  </div>
+  <div class="composer-row">
+    <div id="quickRow" class="quick-row" role="group" aria-label="よく使うフレーズ（タップですぐ記録）"></div>
+    <button id="recordBtn" class="record-btn" type="button">記録</button>
+  </div>
+</section>
+
+<section class="controls">
+  <div class="search-wrap">
+    <span class="search-icon" aria-hidden="true">🔍</span>
+    <input id="searchInput" type="search" placeholder="キーワードで検索" autocomplete="off" enterkeyhint="search" aria-label="メモを検索">
+    <button id="clearSearch" class="clear-btn is-hidden" type="button" aria-label="検索をクリア">✕</button>
+  </div>
+  <div id="filterRow" class="filter-row" role="group" aria-label="絞り込み"></div>
+  <div class="list-head">
+    <div id="listCount" class="list-count">メモはまだありません</div>
+    <button id="copyAllBtn" class="ghost-btn" type="button">📋 まとめてコピー</button>
+  </div>
+</section>
+
+<main>
+  <ul id="memoList" class="memo-list" aria-label="メモ一覧"></ul>
+  <div id="emptyState" class="empty" hidden>
+    <div id="emptyTitle" class="empty-title">まだメモがありません</div>
+    <ul id="emptyTips" class="empty-tips">
+      <li>タグを選んで入力 → 「記録」（PCは ⌘/Ctrl + Enter）</li>
+      <li>フレーズチップはタップですぐ記録</li>
+      <li>「まとめてコピー」でピクルやメールにそのまま貼れます</li>
+    </ul>
+  </div>
+</main>
+
+<footer class="foot">この端末に自動保存されます ・ オフラインで使えます</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite" aria-hidden="true"></div>
+
+<noscript>このページはJavaScriptが必要です。Safariの設定でJavaScriptを有効にしてください。</noscript>
+
+<script>
+'use strict';
+
+/* =========================================================
+   ワンタップ思考メモ — 単一ファイル・オフライン動作
+   ========================================================= */
+
+var STORAGE_KEY = 'onetap_thought_memo_v1';
+
+var TAGS = [
+  { id: 'idea', emoji: '💡', label: 'アイデア' },
+  { id: 'work', emoji: '💼', label: '仕事' },
+  { id: 'home', emoji: '🏠', label: '家族・家' },
+  { id: 'memo', emoji: '📝', label: 'メモ' },
+  { id: 'now',  emoji: '⚡', label: 'すぐやる' }
+];
+
+var QUICK_PHRASES = ['あとで調べる', '確認する', '買い出し', 'ピクルに頼む'];
+
+var THEMES = ['auto', 'light', 'dark'];
+var THEME_ICON = { auto: '🌗', light: '☀️', dark: '🌙' };
+var THEME_LABEL = { auto: 'テーマ: 自動', light: 'テーマ: ライト', dark: 'テーマ: ダーク' };
+
+var state = {
+  memos: [],
+  settings: {
+    theme: 'auto',
+    lastTag: 'memo',
+    filterTag: 'all',
+    onlyOpen: false,
+    query: ''
+  }
+};
+
+var ui = {};
+var tagButtons = {};
+var filterButtons = {};
+var onlyOpenBtn = null;
+var toastTimer = null;
+
+/* ---------- 小物 ---------- */
+
+function tagById(id) {
+  for (var i = 0; i < TAGS.length; i++) {
+    if (TAGS[i].id === id) { return TAGS[i]; }
+  }
+  return null;
+}
+
+function validTag(id) {
+  return tagById(id) ? id : 'memo';
+}
+
+function nowMs() {
+  return Date.now();
+}
+
+function makeId() {
+  return 'm' + nowMs().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function pad2(n) {
+  return n < 10 ? '0' + n : '' + n;
+}
+
+function textOf(v) {
+  return v === null || v === undefined ? '' : String(v);
+}
+
+function collapseSpace(s) {
+  return s.replace(/\r?\n/g, ' / ');
+}
+
+function formatTime(ts) {
+  var d = new Date(ts);
+  var n = new Date();
+  var y = new Date(n.getTime() - 86400000);
+  var hm = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  if (d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate()) {
+    return '今日 ' + hm;
+  }
+  if (d.getFullYear() === y.getFullYear() && d.getMonth() === y.getMonth() && d.getDate() === y.getDate()) {
+    return '昨日 ' + hm;
+  }
+  return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hm;
+}
+
+function formatDate(d) {
+  return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
+}
+
+/* ---------- 保存と読み込み ---------- */
+
+function normalizeMemo(m) {
+  if (!m || typeof m.text !== 'string') { return null; }
+  var t = m.text.replace(/^\s+|\s+$/g, '');
+  if (!t) { return null; }
+  return {
+    id: (typeof m.id === 'string' && m.id) ? m.id : makeId(),
+    text: t,
+    tag: validTag(m.tag),
+    created: (typeof m.created === 'number' && isFinite(m.created)) ? m.created : nowMs(),
+    done: !!m.done,
+    pinned: !!m.pinned
+  };
+}
+
+function loadState() {
+  var raw = null;
+  try {
+    raw = window.localStorage.getItem(STORAGE_KEY);
+  } catch (e) {
+    raw = null;
+  }
+  if (!raw) { return; }
+  var data = null;
+  try {
+    data = JSON.parse(raw);
+  } catch (e2) {
+    data = null;
+  }
+  if (!data) { return; }
+
+  if (data.memos && data.memos.length !== undefined) {
+    var list = [];
+    for (var i = 0; i < data.memos.length; i++) {
+      var m = normalizeMemo(data.memos[i]);
+      if (m) { list.push(m); }
+    }
+    state.memos = list;
+  }
+
+  var s = data.settings;
+  if (s && typeof s === 'object') {
+    if (THEMES.indexOf(s.theme) >= 0) { state.settings.theme = s.theme; }
+    if (tagById(s.lastTag)) { state.settings.lastTag = s.lastTag; }
+  }
+}
+
+function saveState() {
+  var payload = {
+    version: 1,
+    memos: state.memos,
+    settings: {
+      theme: state.settings.theme,
+      lastTag: state.settings.lastTag
+    }
+  };
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/* ---------- メモ操作 ---------- */
+
+function findMemo(id) {
+  for (var i = 0; i < state.memos.length; i++) {
+    if (state.memos[i].id === id) { return state.memos[i]; }
+  }
+  return null;
+}
+
+function findIndex(id) {
+  for (var i = 0; i < state.memos.length; i++) {
+    if (state.memos[i].id === id) { return i; }
+  }
+  return -1;
+}
+
+function addMemo(text, tagId) {
+  var t = textOf(text).replace(/^\s+|\s+$/g, '');
+  if (!t) { return null; }
+  var memo = {
+    id: makeId(),
+    text: t,
+    tag: validTag(tagId),
+    created: nowMs(),
+    done: false,
+    pinned: false
+  };
+  state.memos.unshift(memo);
+  state.settings.lastTag = memo.tag;
+  saveState();
+  render();
+  return memo;
+}
+
+function removeById(id) {
+  var i = findIndex(id);
+  if (i < 0) { return null; }
+  var memo = state.memos[i];
+  state.memos.splice(i, 1);
+  saveState();
+  render();
+  return memo;
+}
+
+function toggleDone(id) {
+  var m = findMemo(id);
+  if (!m) { return; }
+  m.done = !m.done;
+  saveState();
+  render();
+}
+
+function togglePin(id) {
+  var m = findMemo(id);
+  if (!m) { return; }
+  m.pinned = !m.pinned;
+  saveState();
+  render();
+  toast(m.pinned ? '★ ピン留めしました' : 'ピン留めを解除しました');
+}
+
+function deleteMemo(id) {
+  var i = findIndex(id);
+  if (i < 0) { return; }
+  var memo = state.memos[i];
+  state.memos.splice(i, 1);
+  saveState();
+  render();
+  toast('メモを削除しました', '元に戻す', function () {
+    var at = i > state.memos.length ? state.memos.length : i;
+    state.memos.splice(at, 0, memo);
+    saveState();
+    render();
+    toast('元に戻しました');
+  }, 6000);
+}
+
+/* ---------- 表示対象の決定 ---------- */
+
+function matchesQuery(memo, q) {
+  if (memo.text.toLowerCase().indexOf(q) >= 0) { return true; }
+  var t = tagById(memo.tag);
+  if (t) {
+    if (t.label.toLowerCase().indexOf(q) >= 0) { return true; }
+    if (t.emoji.indexOf(q) >= 0) { return true; }
+  }
+  return false;
+}
+
+function compareMemo(a, b) {
+  if (a.pinned !== b.pinned) { return a.pinned ? -1 : 1; }
+  if (a.done !== b.done) { return a.done ? 1 : -1; }
+  return b.created - a.created;
+}
+
+function visibleMemos() {
+  var q = (state.settings.query || '').replace(/^\s+|\s+$/g, '').toLowerCase();
+  var tag = state.settings.filterTag;
+  var onlyOpen = !!state.settings.onlyOpen;
+  var out = [];
+  for (var i = 0; i < state.memos.length; i++) {
+    var m = state.memos[i];
+    if (onlyOpen && m.done) { continue; }
+    if (tag !== 'all' && m.tag !== tag) { continue; }
+    if (q && !matchesQuery(m, q)) { continue; }
+    out.push(m);
+  }
+  out.sort(compareMemo);
+  return out;
+}
+
+function countOpen(list) {
+  var n = 0;
+  for (var i = 0; i < list.length; i++) {
+    if (!list[i].done) { n++; }
+  }
+  return n;
+}
+
+/* ---------- まとめてコピー用テキスト ---------- */
+
+function buildCopyText(items) {
+  var open = [];
+  for (var i = 0; i < items.length; i++) {
+    if (!items[i].done) { open.push(items[i]); }
+  }
+  if (!open.length) { return ''; }
+
+  var lines = ['【思考メモ】' + formatDate(new Date())];
+  for (var t = 0; t < TAGS.length; t++) {
+    var tag = TAGS[t];
+    var group = [];
+    for (var j = 0; j < open.length; j++) {
+      if (open[j].tag === tag.id) { group.push(open[j]); }
+    }
+    if (!group.length) { continue; }
+    lines.push('');
+    lines.push(tag.emoji + ' ' + tag.label);
+    for (var k = 0; k < group.length; k++) {
+      lines.push('・' + collapseSpace(group[k].text));
+    }
+  }
+  return lines.join('\n');
+}
+
+/* ---------- クリップボード・共有 ---------- */
+
+function legacyCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', 'readonly');
+  ta.style.position = 'fixed';
+  ta.style.top = '0';
+  ta.style.left = '0';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  var ok = false;
+  try {
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    ok = document.execCommand('copy');
+  } catch (e) {
+    ok = false;
+  }
+  document.body.removeChild(ta);
+  return ok;
+}
+
+function copyText(text, okMessage) {
+  if (!text) { return; }
+  var nav = (typeof navigator !== 'undefined') ? navigator : null;
+  if (nav && nav.clipboard && nav.clipboard.writeText) {
+    nav.clipboard.writeText(text).then(function () {
+      toast(okMessage || 'コピーしました');
+    }, function () {
+      toast(legacyCopy(text) ? (okMessage || 'コピーしました') : 'コピーできませんでした');
+    });
+    return;
+  }
+  toast(legacyCopy(text) ? (okMessage || 'コピーしました') : 'コピーできませんでした');
+}
+
+function shareText(text) {
+  var nav = (typeof navigator !== 'undefined') ? navigator : null;
+  if (nav && nav.share) {
+    try {
+      nav.share({ text: text }).then(function () {}, function () {});
+      return;
+    } catch (e) { /* fall through */ }
+  }
+  copyText(text, '共有に未対応のためコピーしました');
+}
+
+/* ---------- トースト ---------- */
+
+function hideToast() {
+  if (toastTimer) {
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
+  ui.toast.classList.remove('show');
+  ui.toast.setAttribute('aria-hidden', 'true');
+}
+
+function toast(message, actionLabel, actionFn, ms) {
+  if (!ui.toast) { return; }
+  while (ui.toast.firstChild) { ui.toast.removeChild(ui.toast.firstChild); }
+  var span = document.createElement('span');
+  span.className = 'toast-msg';
+  span.textContent = message;
+  ui.toast.appendChild(span);
+  if (actionLabel && actionFn) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'toast-action';
+    btn.textContent = actionLabel;
+    btn.addEventListener('click', function () {
+      hideToast();
+      actionFn();
+    });
+    ui.toast.appendChild(btn);
+  }
+  ui.toast.classList.add('show');
+  ui.toast.setAttribute('aria-hidden', 'false');
+  if (toastTimer) { clearTimeout(toastTimer); }
+  toastTimer = setTimeout(function () {
+    ui.toast.classList.remove('show');
+    ui.toast.setAttribute('aria-hidden', 'true');
+    toastTimer = null;
+  }, ms || (actionLabel ? 5000 : 2400));
+}
+
+/* ---------- 記録 ---------- */
+
+function selectTag(id) {
+  state.settings.lastTag = validTag(id);
+  saveState();
+  renderTagSelection();
+}
+
+function autoGrow() {
+  var el = ui.input;
+  if (!el || !el.style) { return; }
+  el.style.height = 'auto';
+  var h = el.scrollHeight;
+  if (!h || !isFinite(h)) { return; }
+  el.style.height = (h > 180 ? 180 : h) + 'px';
+}
+
+function updateRecordState() {
+  var empty = !(ui.input.value || '').replace(/\s/g, '');
+  ui.recordBtn.classList.toggle('is-idle', empty);
+}
+
+function record() {
+  var text = ui.input.value || '';
+  if (!text.replace(/\s/g, '')) {
+    toast('入力欄が空です');
+    try { ui.input.focus(); } catch (e) {}
+    return;
+  }
+  var memo = addMemo(text, state.settings.lastTag);
+  ui.input.value = '';
+  autoGrow();
+  updateRecordState();
+  if (memo) {
+    toast('記録しました', '元に戻す', function () {
+      removeById(memo.id);
+      toast('取り消しました');
+    }, 4000);
+  }
+  try { ui.input.focus(); } catch (e2) {}
+}
+
+function quickPhrase(phrase) {
+  var cur = ui.input.value || '';
+  if (cur.replace(/\s/g, '')) {
+    var joiner = /[\s、,]$/.test(cur) ? '' : ' ';
+    ui.input.value = cur.replace(/\s+$/g, '') + joiner + phrase;
+    autoGrow();
+    updateRecordState();
+    toast('入力欄に「' + phrase + '」を追加');
+    return;
+  }
+  var memo = addMemo(phrase, state.settings.lastTag);
+  if (memo) {
+    toast('「' + phrase + '」を記録しました', '元に戻す', function () {
+      removeById(memo.id);
+      toast('取り消しました');
+    }, 4000);
+  }
+}
+
+/* ---------- テーマ ---------- */
+
+function applyTheme() {
+  var t = state.settings.theme;
+  var root = document.documentElement;
+  if (t === 'light' || t === 'dark') {
+    root.setAttribute('data-theme', t);
+  } else {
+    root.removeAttribute('data-theme');
+  }
+  if (ui.themeBtn) {
+    ui.themeBtn.textContent = THEME_ICON[t] || THEME_ICON.auto;
+    ui.themeBtn.setAttribute('aria-label', THEME_LABEL[t] || THEME_LABEL.auto);
+    ui.themeBtn.setAttribute('title', THEME_LABEL[t] || THEME_LABEL.auto);
+  }
+}
+
+function cycleTheme() {
+  var i = THEMES.indexOf(state.settings.theme);
+  state.settings.theme = THEMES[(i + 1) % THEMES.length];
+  saveState();
+  applyTheme();
+  toast(THEME_LABEL[state.settings.theme]);
+}
+
+/* ---------- 描画 ---------- */
+
+function buildTagButtons() {
+  for (var i = 0; i < TAGS.length; i++) {
+    (function (tag) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tag-chip';
+      b.setAttribute('data-tag', tag.id);
+      var e = document.createElement('span');
+      e.className = 'tag-emoji';
+      e.textContent = tag.emoji;
+      var l = document.createElement('span');
+      l.className = 'tag-label';
+      l.textContent = tag.label;
+      b.appendChild(e);
+      b.appendChild(l);
+      b.addEventListener('click', function () { selectTag(tag.id); });
+      ui.tagRow.appendChild(b);
+      tagButtons[tag.id] = b;
+    })(TAGS[i]);
+  }
+}
+
+function buildQuickButtons() {
+  for (var i = 0; i < QUICK_PHRASES.length; i++) {
+    (function (phrase) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'quick-chip';
+      b.textContent = phrase;
+      b.setAttribute('aria-label', phrase + ' を記録');
+      b.addEventListener('click', function () { quickPhrase(phrase); });
+      ui.quickRow.appendChild(b);
+    })(QUICK_PHRASES[i]);
+  }
+}
+
+function buildFilterButtons() {
+  var all = document.createElement('button');
+  all.type = 'button';
+  all.className = 'filter-chip';
+  all.textContent = 'すべて';
+  all.setAttribute('data-filter', 'all');
+  all.addEventListener('click', function () { setFilterTag('all'); });
+  ui.filterRow.appendChild(all);
+  filterButtons['all'] = all;
+
+  for (var i = 0; i < TAGS.length; i++) {
+    (function (tag) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'filter-chip';
+      b.setAttribute('data-filter', tag.id);
+      var e = document.createElement('span');
+      e.textContent = tag.emoji;
+      var l = document.createElement('span');
+      l.textContent = tag.label;
+      b.appendChild(e);
+      b.appendChild(l);
+      b.addEventListener('click', function () { setFilterTag(tag.id); });
+      ui.filterRow.appendChild(b);
+      filterButtons[tag.id] = b;
+    })(TAGS[i]);
+  }
+
+  var sep = document.createElement('span');
+  sep.className = 'filter-sep';
+  ui.filterRow.appendChild(sep);
+
+  onlyOpenBtn = document.createElement('button');
+  onlyOpenBtn.type = 'button';
+  onlyOpenBtn.className = 'filter-chip';
+  onlyOpenBtn.textContent = '未完了のみ';
+  onlyOpenBtn.addEventListener('click', function () {
+    state.settings.onlyOpen = !state.settings.onlyOpen;
+    saveState();
+    render();
+  });
+  ui.filterRow.appendChild(onlyOpenBtn);
+}
+
+function setFilterTag(id) {
+  state.settings.filterTag = (id === 'all' || tagById(id)) ? id : 'all';
+  saveState();
+  render();
+}
+
+function renderTagSelection() {
+  for (var i = 0; i < TAGS.length; i++) {
+    var id = TAGS[i].id;
+    var b = tagButtons[id];
+    if (!b) { continue; }
+    var on = state.settings.lastTag === id;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+}
+
+function renderFilters() {
+  for (var key in filterButtons) {
+    if (!filterButtons.hasOwnProperty(key)) { continue; }
+    var on = state.settings.filterTag === key;
+    filterButtons[key].classList.toggle('on', on);
+    filterButtons[key].setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  if (onlyOpenBtn) {
+    onlyOpenBtn.classList.toggle('only-on', !!state.settings.onlyOpen);
+    onlyOpenBtn.setAttribute('aria-pressed', state.settings.onlyOpen ? 'true' : 'false');
+  }
+  if (ui.clearSearch) {
+    ui.clearSearch.classList.toggle('is-hidden', !(ui.searchInput.value || ''));
+  }
+}
+
+function makeActionButton(label, icon, cls, handler) {
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'act' + (cls ? ' ' + cls : '');
+  var i = document.createElement('span');
+  i.className = 'act-icon';
+  i.textContent = icon;
+  var s = document.createElement('span');
+  s.textContent = label;
+  b.appendChild(i);
+  b.appendChild(s);
+  b.addEventListener('click', handler);
+  return b;
+}
+
+function createMemoNode(memo) {
+  var tag = tagById(memo.tag) || TAGS[3];
+
+  var li = document.createElement('li');
+  li.className = 'memo' + (memo.done ? ' is-done' : '') + (memo.pinned ? ' is-pinned' : '');
+  li.setAttribute('data-id', memo.id);
+
+  var top = document.createElement('div');
+  top.className = 'memo-top';
+
+  var textEl = document.createElement('div');
+  textEl.className = 'memo-text';
+  textEl.textContent = memo.text;
+  top.appendChild(textEl);
+
+  var pin = document.createElement('button');
+  pin.type = 'button';
+  pin.className = 'pin-btn' + (memo.pinned ? ' on' : '');
+  pin.textContent = memo.pinned ? '★' : '☆';
+  pin.setAttribute('aria-label', memo.pinned ? 'ピン留めを解除' : 'ピン留め');
+  pin.setAttribute('aria-pressed', memo.pinned ? 'true' : 'false');
+  pin.addEventListener('click', function () { togglePin(memo.id); });
+  top.appendChild(pin);
+
+  li.appendChild(top);
+
+  var meta = document.createElement('div');
+  meta.className = 'memo-meta';
+  var pill = document.createElement('span');
+  pill.className = 'pill ' + tag.id;
+  pill.textContent = tag.emoji + ' ' + tag.label;
+  meta.appendChild(pill);
+  var time = document.createElement('span');
+  time.className = 'time';
+  time.textContent = formatTime(memo.created);
+  meta.appendChild(time);
+  li.appendChild(meta);
+
+  var actions = document.createElement('div');
+  actions.className = 'memo-actions';
+
+  actions.appendChild(makeActionButton(
+    memo.done ? '未完了' : '完了',
+    '✓',
+    memo.done ? 'done-on' : '',
+    function () { toggleDone(memo.id); }
+  ));
+  actions.appendChild(makeActionButton('コピー', '⧉', '', function () {
+    copyText(memo.text, 'メモをコピーしました');
+  }));
+  actions.appendChild(makeActionButton('共有', '↗', '', function () {
+    shareText(memo.text);
+  }));
+  actions.appendChild(makeActionButton('削除', '🗑', 'del', function () {
+    deleteMemo(memo.id);
+  }));
+
+  li.appendChild(actions);
+  return li;
+}
+
+function renderList() {
+  var list = ui.list;
+  while (list.firstChild) { list.removeChild(list.firstChild); }
+
+  var items = visibleMemos();
+  for (var i = 0; i < items.length; i++) {
+    list.appendChild(createMemoNode(items[i]));
+  }
+
+  if (!state.memos.length) {
+    ui.emptyTitle.textContent = 'まだメモがありません';
+    ui.emptyTips.style.display = '';
+    ui.empty.hidden = false;
+  } else if (!items.length) {
+    ui.emptyTitle.textContent = '条件に合うメモはありません';
+    ui.emptyTips.style.display = 'none';
+    ui.empty.hidden = false;
+  } else {
+    ui.empty.hidden = true;
+  }
+}
+
+function updateCounts() {
+  var total = state.memos.length;
+  var open = countOpen(state.memos);
+  var shown = visibleMemos();
+  var filtering = state.settings.filterTag !== 'all' || state.settings.onlyOpen || !!(state.settings.query || '').replace(/\s/g, '');
+  var txt;
+  if (!total) {
+    txt = 'メモはまだありません';
+  } else if (filtering) {
+    txt = '表示 ' + shown.length + '件 ・ 未完了 ' + countOpen(shown) + '件';
+  } else if (open === total) {
+    txt = '未完了 ' + open + '件';
+  } else {
+    txt = '未完了 ' + open + '件 ・ 完了 ' + (total - open) + '件';
+  }
+  ui.count.textContent = txt;
+}
+
+function render() {
+  renderTagSelection();
+  renderFilters();
+  renderList();
+  updateCounts();
+}
+
+/* ---------- まとめてコピー ---------- */
+
+function copyAll() {
+  var items = visibleMemos();
+  var text = buildCopyText(items);
+  if (!text) {
+    toast('未完了のメモがありません');
+    return;
+  }
+  var n = countOpen(items);
+  copyText(text, '未完了メモ ' + n + '件をコピーしました');
+}
+
+/* ---------- 初期化 ---------- */
+
+function cacheUi() {
+  ui.input = document.getElementById('memoInput');
+  ui.recordBtn = document.getElementById('recordBtn');
+  ui.tagRow = document.getElementById('tagRow');
+  ui.quickRow = document.getElementById('quickRow');
+  ui.filterRow = document.getElementById('filterRow');
+  ui.searchInput = document.getElementById('searchInput');
+  ui.clearSearch = document.getElementById('clearSearch');
+  ui.list = document.getElementById('memoList');
+  ui.empty = document.getElementById('emptyState');
+  ui.emptyTitle = document.getElementById('emptyTitle');
+  ui.emptyTips = document.getElementById('emptyTips');
+  ui.count = document.getElementById('listCount');
+  ui.copyAllBtn = document.getElementById('copyAllBtn');
+  ui.toast = document.getElementById('toast');
+  ui.themeBtn = document.getElementById('themeBtn');
+}
+
+function bindEvents() {
+  ui.recordBtn.addEventListener('click', function () { record(); });
+
+  ui.input.addEventListener('input', function () {
+    autoGrow();
+    updateRecordState();
+  });
+
+  ui.input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      record();
+    }
+  });
+
+  ui.themeBtn.addEventListener('click', function () { cycleTheme(); });
+  ui.copyAllBtn.addEventListener('click', function () { copyAll(); });
+
+  ui.searchInput.addEventListener('input', function () {
+    state.settings.query = ui.searchInput.value;
+    render();
+  });
+
+  ui.clearSearch.addEventListener('click', function () {
+    ui.searchInput.value = '';
+    state.settings.query = '';
+    render();
+    try { ui.searchInput.focus(); } catch (e) {}
+  });
+}
+
+function init() {
+  loadState();
+  cacheUi();
+  buildTagButtons();
+  buildQuickButtons();
+  buildFilterButtons();
+  bindEvents();
+  applyTheme();
+  autoGrow();
+  updateRecordState();
+  render();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
