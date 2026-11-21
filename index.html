@@ -296,6 +296,7 @@
     border-radius:var(--radius);
     padding:12px 12px 8px;
     box-shadow:var(--shadow);
+    scroll-margin-top:170px;
   }
   .memo.is-pinned{ border-color:var(--accent); }
   .memo.is-done{ opacity:.62; }
@@ -347,6 +348,41 @@
   .act.done-on{ color:var(--accent); }
   .act.del{ color:var(--danger); }
   .act .act-icon{ font-size:13.5px; }
+
+  /* ---------- inline edit ---------- */
+  .memo.is-editing{
+    border-color:var(--accent);
+    box-shadow:0 0 0 2px var(--accent-soft), var(--shadow);
+  }
+  .edit-wrap{ display:flex; flex-direction:column; gap:8px; }  .edit-input{
+    display:block; width:100%; min-height:80px; max-height:260px;
+    padding:10px 12px;
+    font-size:16px; line-height:1.55;
+    color:var(--text); background:var(--card-2);
+    border:1px solid var(--accent); border-radius:12px;
+    outline:none; resize:none; overflow-y:auto;
+    -webkit-appearance:none; appearance:none;
+  }
+  .edit-input:focus{ box-shadow:0 0 0 3px var(--accent-soft); }
+  .edit-tag-row{ display:flex; flex-wrap:wrap; gap:6px; }
+  .edit-tag-row .tag-chip{ min-height:40px; padding:0 10px; font-size:12.5px; border-radius:11px; }
+  .edit-tag-row .tag-chip .tag-emoji{ font-size:13px; }
+  .edit-actions{ display:flex; align-items:center; gap:8px; }
+  .edit-hint{
+    flex:1; min-width:0;
+    font-size:11.5px; color:var(--text-faint);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .edit-btn{
+    flex:none; min-height:44px; padding:0 18px;
+    border-radius:12px; border:1px solid var(--line);
+    background:var(--card); color:var(--text-soft);
+    font-size:14px; font-weight:700;
+  }
+  .edit-btn:active{ transform:scale(.97); }
+  .edit-btn.save{ background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
+  .edit-btn.save[disabled]{ opacity:.42; }
+  .edit-btn.save[disabled]:active{ transform:none; }
 
   button:focus-visible, input:focus-visible, textarea:focus-visible{
     outline:2px solid var(--accent); outline-offset:2px;
@@ -446,7 +482,7 @@
   </div>
 </main>
 
-<footer class="foot">この端末に自動保存されます ・ オフラインで使えます</footer>
+<footer class="foot">この端末に自動保存されます ・ ✏️ でいつでも編集 ・ オフラインで使えます</footer>
 
 <div id="toast" class="toast" role="status" aria-live="polite" aria-hidden="true"></div>
 
@@ -549,7 +585,7 @@ function normalizeMemo(m) {
   if (!m || typeof m.text !== 'string') { return null; }
   var t = m.text.replace(/^\s+|\s+$/g, '');
   if (!t) { return null; }
-  return {
+  var memo = {
     id: (typeof m.id === 'string' && m.id) ? m.id : makeId(),
     text: t,
     tag: validTag(m.tag),
@@ -557,6 +593,10 @@ function normalizeMemo(m) {
     done: !!m.done,
     pinned: !!m.pinned
   };
+  if (typeof m.updatedAt === 'number' && isFinite(m.updatedAt) && m.updatedAt > 0) {
+    memo.updatedAt = m.updatedAt;
+  }
+  return memo;
 }
 
 function loadState() {
@@ -647,6 +687,7 @@ function removeById(id) {
   if (i < 0) { return null; }
   var memo = state.memos[i];
   state.memos.splice(i, 1);
+  closeEditIf(id);
   saveState();
   render();
   return memo;
@@ -674,6 +715,7 @@ function deleteMemo(id) {
   if (i < 0) { return; }
   var memo = state.memos[i];
   state.memos.splice(i, 1);
+  closeEditIf(id);
   saveState();
   render();
   toast('メモを削除しました', '元に戻す', function () {
@@ -683,6 +725,224 @@ function deleteMemo(id) {
     render();
     toast('元に戻しました');
   }, 6000);
+}
+
+/* ---------- 編集（インライン） ---------- */
+
+var edit = null;   /* { id, text, tag } — 保存するまで state.memos には触れない */
+var editRefs = {}; /* 編集中カードの入力欄・ボタン参照 */
+
+function isEditing(id) {
+  return !!edit && edit.id === id;
+}
+
+function closeEditIf(id) {
+  if (edit && edit.id === id) {
+    edit = null;
+    editRefs = {};
+  }
+}
+
+function startEdit(id) {
+  var m = findMemo(id);
+  if (!m) { return; }
+  if (edit && edit.id === id) {
+    focusEditInput(false);
+    return;
+  }
+  if (edit) {
+    toast('編集中のメモを保存するかキャンセルしてください');
+    return;
+  }
+  edit = { id: m.id, text: m.text, tag: m.tag };
+  render();
+  focusEditInput(true);
+  toast('本文とタグを編集できます');
+}
+
+function focusEditInput(scroll) {
+  var ta = editRefs.input;
+  if (!ta) { return; }
+  try { ta.focus(); } catch (e) {}
+  try {
+    if (ta.setSelectionRange) {
+      var n = (ta.value || '').length;
+      ta.setSelectionRange(n, n);
+    }
+  } catch (e2) {}
+  if (scroll) {
+    try {
+      if (ta.scrollIntoView) { ta.scrollIntoView({ block: 'nearest' }); }
+    } catch (e3) {}
+  }
+}
+
+function autoGrowEdit(el) {
+  if (!el || !el.style) { return; }
+  el.style.height = 'auto';
+  var h = el.scrollHeight;
+  if (!h || !isFinite(h)) { return; }
+  el.style.height = (h > 260 ? 260 : h) + 'px';
+}
+
+function editTextIsEmpty() {
+  var t = (edit && edit.text) ? String(edit.text) : '';
+  return !t.replace(/\s/g, '');
+}
+
+function updateEditSaveState() {
+  var empty = editTextIsEmpty();
+  var btn = editRefs.save;
+  if (btn) {
+    btn.disabled = empty;
+    btn.setAttribute('aria-disabled', empty ? 'true' : 'false');
+  }
+  if (editRefs.hint) {
+    editRefs.hint.textContent = empty ? '本文を入力してください' : '空欄では保存できません';
+  }
+}
+
+function renderEditTagSelection() {
+  if (!edit || !editRefs.tagButtons) { return; }
+  for (var i = 0; i < TAGS.length; i++) {
+    var id = TAGS[i].id;
+    var b = editRefs.tagButtons[id];
+    if (!b) { continue; }
+    var on = edit.tag === id;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+}
+
+function selectEditTag(id) {
+  if (!edit) { return; }
+  edit.tag = validTag(id);
+  renderEditTagSelection();
+}
+
+function cancelEdit() {
+  if (!edit) { return; }
+  edit = null;
+  editRefs = {};
+  render();
+  toast('編集をキャンセルしました');
+}
+
+function saveEdit() {
+  if (!edit) { return false; }
+  var memo = findMemo(edit.id);
+  if (!memo) {
+    edit = null;
+    editRefs = {};
+    render();
+    return false;
+  }
+  var t = String(edit.text || '').replace(/^\s+|\s+$/g, '');
+  if (!t) {
+    updateEditSaveState();
+    toast('本文が空のため保存できません');
+    return false;
+  }
+  var tag = validTag(edit.tag);
+  var changed = (t !== memo.text) || (tag !== memo.tag);
+  memo.text = t;
+  memo.tag = tag;
+  if (changed) { memo.updatedAt = nowMs(); }
+  edit = null;
+  editRefs = {};
+  saveState();
+  render();
+  toast(changed ? '編集を保存しました' : '変更はありませんでした');
+  return true;
+}
+
+function createEditPanel(memo) {
+  var wrap = document.createElement('div');
+  wrap.className = 'edit-wrap';
+
+  var ta = document.createElement('textarea');
+  ta.className = 'edit-input';
+  ta.value = edit.text;
+  ta.setAttribute('rows', '3');
+  ta.setAttribute('autocomplete', 'off');
+  ta.setAttribute('autocapitalize', 'off');
+  ta.setAttribute('aria-label', 'メモ本文を編集');
+  ta.addEventListener('input', function () {
+    if (!edit) { return; }
+    edit.text = ta.value;
+    autoGrowEdit(ta);
+    updateEditSaveState();
+  });
+  ta.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEdit();
+      return;
+    }
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      saveEdit();
+    }
+  });
+  wrap.appendChild(ta);
+  editRefs.input = ta;
+
+  var tagRow = document.createElement('div');
+  tagRow.className = 'edit-tag-row';
+  tagRow.setAttribute('role', 'group');
+  tagRow.setAttribute('aria-label', 'カテゴリを変更');
+  editRefs.tagRow = tagRow;
+  editRefs.tagButtons = {};
+  for (var i = 0; i < TAGS.length; i++) {
+    (function (tag) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tag-chip';
+      b.setAttribute('data-tag', tag.id);
+      var e = document.createElement('span');
+      e.className = 'tag-emoji';
+      e.textContent = tag.emoji;
+      var l = document.createElement('span');
+      l.textContent = tag.label;
+      b.appendChild(e);
+      b.appendChild(l);
+      b.addEventListener('click', function () { selectEditTag(tag.id); });
+      tagRow.appendChild(b);
+      editRefs.tagButtons[tag.id] = b;
+    })(TAGS[i]);
+  }
+  wrap.appendChild(tagRow);
+
+  var actions = document.createElement('div');
+  actions.className = 'edit-actions';
+
+  var hint = document.createElement('span');
+  hint.className = 'edit-hint';
+  hint.textContent = '空欄では保存できません';
+  actions.appendChild(hint);
+  editRefs.hint = hint;
+
+  var cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'edit-btn cancel';
+  cancelBtn.textContent = 'キャンセル';
+  cancelBtn.addEventListener('click', function () { cancelEdit(); });
+  actions.appendChild(cancelBtn);
+
+  var saveBtn = document.createElement('button');
+  saveBtn.type = 'button';
+  saveBtn.className = 'edit-btn save';
+  saveBtn.textContent = '保存';
+  saveBtn.addEventListener('click', function () { saveEdit(); });
+  actions.appendChild(saveBtn);
+  editRefs.save = saveBtn;
+
+  wrap.appendChild(actions);
+
+  renderEditTagSelection();
+  updateEditSaveState();
+  autoGrowEdit(ta);
+  return wrap;
 }
 
 /* ---------- 表示対象の決定 ---------- */
@@ -1060,8 +1320,13 @@ function createMemoNode(memo) {
   var tag = tagById(memo.tag) || TAGS[3];
 
   var li = document.createElement('li');
-  li.className = 'memo' + (memo.done ? ' is-done' : '') + (memo.pinned ? ' is-pinned' : '');
+  li.className = 'memo' + (memo.done ? ' is-done' : '') + (memo.pinned ? ' is-pinned' : '') + (isEditing(memo.id) ? ' is-editing' : '');
   li.setAttribute('data-id', memo.id);
+
+  if (isEditing(memo.id)) {
+    li.appendChild(createEditPanel(memo));
+    return li;
+  }
 
   var top = document.createElement('div');
   top.className = 'memo-top';
@@ -1092,11 +1357,18 @@ function createMemoNode(memo) {
   time.className = 'time';
   time.textContent = formatTime(memo.created);
   meta.appendChild(time);
+  if (memo.updatedAt) {
+    var updated = document.createElement('span');
+    updated.className = 'time time-updated';
+    updated.textContent = '更新 ' + formatTime(memo.updatedAt);
+    meta.appendChild(updated);
+  }
   li.appendChild(meta);
 
   var actions = document.createElement('div');
   actions.className = 'memo-actions';
 
+  actions.appendChild(makeActionButton('編集', '✏️', '', function () { startEdit(memo.id); }));
   actions.appendChild(makeActionButton(
     memo.done ? '未完了' : '完了',
     '✓',
@@ -1120,7 +1392,7 @@ function createMemoNode(memo) {
 function renderList() {
   var list = ui.list;
   while (list.firstChild) { list.removeChild(list.firstChild); }
-
+  editRefs = {};
   var items = visibleMemos();
   for (var i = 0; i < items.length; i++) {
     list.appendChild(createMemoNode(items[i]));
